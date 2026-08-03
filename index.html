@@ -1,26 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MOMENTS YSS</title>
+  <title>Three Thousand Fund Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body, html { 
-      margin: 0; 
-      padding: 0; 
-      height: 100%; 
-      width: 100%; 
-      overflow: hidden; 
-    }
-    iframe { 
-      width: 100%; 
-      height: 100%; 
-      border: none; 
-      display: block; 
-    }
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; }
+    .card:hover { transform: translateY(-3px); }
+    .member-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #dee2e6; }
+    .member-avatar { width: 45px; height: 45px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background-color: #343a40; color: white; font-weight: bold; font-size: 18px; border: 2px solid #dee2e6; }
+    .loan-id-badge { background-color: #000000 !important; color: #ffffff !important; font-weight: 600; padding: 5px 10px; border-radius: 6px; }
   </style>
 </head>
 <body>
-  <iframe src="https://script.google.com/macros/s/AKfycbwy6jcSwftC5yRVhjdi6LuPtNqKEios36_vZv6GzRGI8lRIHWMTdX0iW3D4d4LuqZf4/exec"></iframe>
+
+  <div class="container py-4">
+    <div class="text-center mb-4">
+      <h1 class="fw-bold text-dark mb-1">Three Thousand Fund Dashboard</h1>
+      <p class="text-muted fw-semibold">Started From: July 2025</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills justify-content-center mb-4" id="pills-tab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active px-4 fw-bold" id="pills-savings-tab" data-bs-toggle="pill" data-bs-target="#pills-savings" type="button" role="tab">Savings & Summary</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link px-4 fw-bold" id="pills-loans-tab" data-bs-toggle="pill" data-bs-target="#pills-loans" type="button" role="tab">Loan Details Page</button>
+      </li>
+    </ul>
+
+    <!-- Top Summary Cards -->
+    <div class="row g-3 mb-4 text-center">
+      <div class="col-md-3 col-6"><div class="card p-3 border-top border-primary border-4"><small class="text-muted">Total Savings Fund</small><h4 id="totalFund" class="fw-bold mt-1">Loading...</h4></div></div>
+      <div class="col-md-3 col-6"><div class="card p-3 border-top border-warning border-4"><small class="text-muted">Total Loan Given</small><h4 id="totalLoanGiven" class="fw-bold mt-1">Loading...</h4></div></div>
+      <div class="col-md-3 col-6"><div class="card p-3 border-top border-success border-4"><small class="text-muted">Loan Profit (Interest)</small><h4 id="totalInterest" class="fw-bold mt-1">Loading...</h4></div></div>
+      <div class="col-md-3 col-6"><div class="card p-3 border-top border-info border-4"><small class="text-muted">Available Balance</small><h4 id="netFund" class="fw-bold mt-1">Loading...</h4></div></div>
+    </div>
+
+    <div class="tab-content" id="pills-tabContent">
+      <!-- Savings Tab -->
+      <div class="tab-pane fade show active" id="pills-savings" role="tabpanel">
+        <div class="card p-4">
+          <h3 class="mb-3 text-secondary">Members Savings Status</h3>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Member</th>
+                  <th>Months Paid</th>
+                  <th>Invested Amount</th>
+                  <th>Pending Balance</th>
+                </tr>
+              </thead>
+              <tbody id="savingsTableBody">
+                <tr><td colspan="4" class="text-center py-4">Loading members...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loan Details Tab -->
+      <div class="tab-pane fade" id="pills-loans" role="tabpanel">
+        <div class="card p-4">
+          <h3 class="mb-3 text-secondary">Loan History & Balances</h3>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Loan ID</th>
+                  <th>Name</th>
+                  <th>Loan Amount</th>
+                  <th>Interest</th>
+                  <th>Total Payable</th>
+                  <th>Balance to Pay</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="loanTableBody">
+                <tr><td colspan="8" class="text-center py-4">Loading loans...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxaUMBf3M1I28HOn1Y6H-0h4Kebai1hr9oAoNodpKIl9M6zI-BS0N9aZZeiacNY5XHW/exec";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      fetchData();
+    });
+
+    async function fetchData() {
+      try {
+        const response = await fetch(SCRIPT_URL);
+        const data = await response.json();
+        updateDashboard(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        document.getElementById("totalFund").innerText = "Error";
+      }
+    }
+
+    function updateDashboard(data) {
+      // Summary Values
+      document.getElementById("totalFund").innerText = "₹" + data.totalFund;
+      document.getElementById("totalLoanGiven").innerText = "₹" + data.totalLoanGiven;
+      document.getElementById("totalInterest").innerText = "₹" + data.totalInterestEarned;
+      document.getElementById("netFund").innerText = "₹" + data.netFund;
+
+      // Savings Table
+      let savingsHtml = "";
+      data.members.forEach(m => {
+        let imgTag = m.imageUrl 
+          ? `<img src="${m.imageUrl}" class="member-img me-2" alt="${m.name}">` 
+          : `<div class="member-avatar me-2">${m.name ? m.name.charAt(0).toUpperCase() : ""}</div>`;
+          
+        savingsHtml += `
+          <tr>
+            <td><div class="d-flex align-items-center">${imgTag} <span class="fw-bold">${m.name}</span></div></td>
+            <td>${m.totalMonths} Months</td>
+            <td><span class="text-success fw-bold">₹${m.investedAmount}</span></td>
+            <td><span class="text-danger">₹${m.pendingAmount}</span></td>
+          </tr>
+        `;
+      });
+      document.getElementById("savingsTableBody").innerHTML = savingsHtml;
+
+      // Loan Table
+      let loanHtml = "";
+      if(data.loans.length === 0) {
+        loanHtml = `<tr><td colspan="8" class="text-center py-4 text-muted">No loan records found</td></tr>`;
+      } else {
+        data.loans.forEach(l => {
+          let badgeClass = l.status === "Active" ? "bg-danger" : "bg-success";
+          loanHtml += `
+            <tr>
+              <td>${l.date}</td>
+              <td><span class="loan-id-badge">${l.loanId}</span></td>
+              <td class="fw-bold">${l.name}</td>
+              <td>₹${l.loanAmount}</td>
+              <td>₹${l.interestDue}</td>
+              <td>₹${l.totalPayable}</td>
+              <td class="fw-bold text-danger">₹${l.finalBalance}</td>
+              <td><span class="badge ${badgeClass}">${l.status}</span></td>
+            </tr>
+          `;
+        });
+      }
+      document.getElementById("loanTableBody").innerHTML = loanHtml;
+    }
+  </script>
 </body>
 </html>
