@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Thousand Fund Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #16a085;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --total-loan-color: #2c3e50;
+            --available-balance-color: #27ae60;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .card h3 {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin: 0 0 8px 0;
+        }
+
+        .card .amount {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .card.total-loan .amount {
+            color: var(--total-loan-color);
+        }
+
+        .card.available-balance .amount {
+            color: var(--available-balance-color);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .loan-id {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Three Thousand Fund</h1>
+            <p style="font-size: 0.85rem; color: #666;">Member Dashboard</p>
+        </header>
+
+        <div id="loading" class="loading">Loading dashboard data...</div>
+
+        <div id="dashboard-content" style="display: none;">
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="card total-loan">
+                    <h3>Total Loan Given</h3>
+                    <div class="amount" id="total-loan">₹0</div>
+                </div>
+                <div class="card available-balance">
+                    <h3>Available Balance</h3>
+                    <div class="amount" id="available-balance">₹0</div>
+                </div>
+            </div>
+
+            <!-- Members Section -->
+            <div class="section-title">Members Overview</div>
+            <div class="table-responsive">
+                <table id="members-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Savings</th>
+                            <th>Loan Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will load dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loans Section -->
+            <div class="section-title">Active Loans</div>
+            <div class="table-responsive">
+                <table id="loans-table">
+                    <thead>
+                        <tr>
+                            <th>Loan ID</th>
+                            <th>Member</th>
+                            <th>Amount</th>
+                            <th>Interest</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will load dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy6jcSwftC5yRVhjdi6LuPtNqKEios36_vZv6GzRGI8lRIHWMTdX0iW3D4d4LuqZf4/exec";
+
+        async function fetchData() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+                
+                // Update Summary Cards
+                document.getElementById('total-loan').innerText = `₹${data.totalLoan || 0}`;
+                document.getElementById('available-balance').innerText = `₹${data.availableBalance || 0}`;
+
+                // Populate Members Table
+                const membersTableBody = document.querySelector('#members-table tbody');
+                membersTableBody.innerHTML = '';
+                if(data.members) {
+                    data.members.forEach(member => {
+                        membersTableBody.innerHTML += `
+                            <tr>
+                                <td>${member.name}</td>
+                                <td>₹${member.savings}</td>
+                                <td>${member.loanStatus}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // Populate Loans Table
+                const loansTableBody = document.querySelector('#loans-table tbody');
+                loansTableBody.innerHTML = '';
+                if(data.loans) {
+                    data.loans.forEach(loan => {
+                        loansTableBody.innerHTML += `
+                            <tr>
+                                <td><span class="loan-id">${loan.id}</span></td>
+                                <td>${loan.member}</td>
+                                <td>₹${loan.amount}</td>
+                                <td>${loan.interest}%</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // Hide loading and show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('loading').innerText = 'Failed to load data. Please check connection.';
+            }
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
